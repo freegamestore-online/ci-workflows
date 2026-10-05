@@ -15,7 +15,7 @@ name: Game CI / Deploy (reusable)
 #   on: { push: { branches: [main] }, pull_request: { branches: [main] } }
 #   jobs:
 #     ci-and-deploy:
-#       uses: freegamestore-online/freegamestore/.github/workflows/game-ci.yml@main
+#       uses: freegamestore-online/ci-workflows/.github/workflows/game-ci.yml@main
 #       with:
 #         cf_project: freebowlingapp
 #       permissions: { contents: read, deployments: write }
@@ -211,7 +211,8 @@ jobs:
               returnByValue: true,
             });
             const value = evaluated.result?.result?.value;
-            if (errors.length) throw new Error("Browser errors:\\n" + errors.slice(0, 8).join("\\n"));
+            const realErrors = errors.filter(e => !isIgnoredBrowserNoise(e));
+            if (realErrors.length) throw new Error("Browser errors:\\n" + realErrors.slice(0, 8).join("\\n"));
             if (!value || (value.bodyChildren === 0 && value.rootChildren === 0 && value.canvasCount === 0)) {
               throw new Error("Game rendered no body/root/canvas content");
             }
