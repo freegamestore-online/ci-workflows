@@ -117,15 +117,22 @@ jobs:
 
       - name: Smoke test built game
         run: |
-          pnpm --dir web exec vite preview --host 127.0.0.1 --port 4173 > /tmp/fgs-preview.log 2>&1 &
-          PREVIEW_PID=$!
-          trap 'kill "$PREVIEW_PID" >/dev/null 2>&1 || true' EXIT
-          for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:4173/ >/dev/null
-          node <<'NODE'
+          smoke_run() {
+            pnpm --dir web exec vite preview --host 127.0.0.1 --port 4173 > /tmp/fgs-preview.log 2>&1 &
+            local PREVIEW_PID=$!
+            local up=0
+            for i in {1..30}; do
+              if curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then up=1; break; fi
+              sleep 1
+            done
+            if [ "$up" != 1 ]; then
+              echo "::error::vite preview never answered on 127.0.0.1:4173. Preview log:"
+              cat /tmp/fgs-preview.log || true
+              kill "$PREVIEW_PID" 2>/dev/null || true
+              return 1
+            fi
+            local rc=0
+            node <<'NODE' || rc=$?
           const { spawn } = require("node:child_process");
           async function main() {
           const chromeBin = process.env.CHROME_BIN || "/usr/bin/google-chrome";
@@ -142,7 +149,7 @@ jobs:
             "--disable-background-networking",
             "--user-data-dir=/tmp/fgs-smoke-chrome",
             "about:blank",
-          ], { stdio: ["ignore", "ignore", "pipe"] });
+          ], { stdio: ["ignore", "ignore", "pipe"], env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: "/dev/null" } });
           let stderr = "";
           chrome.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
           async function fetchJson(url, init) {
@@ -224,6 +231,11 @@ jobs:
           }
           main().catch((err) => { console.error(err.stack || err); process.exit(1); });
           NODE
+            kill "$PREVIEW_PID" 2>/dev/null || true
+            wait "$PREVIEW_PID" 2>/dev/null || true
+            return "$rc"
+          }
+          smoke_run || { echo "::warning::smoke attempt 1 failed; retrying once after 5s"; sleep 5; smoke_run; }
 
       # Hand the built artifact off to the deploy job. `if-no-files-found:
       # error` means we'd rather hard-fail than silently deploy nothing.
