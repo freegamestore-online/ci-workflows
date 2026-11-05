@@ -44,7 +44,7 @@ on:
         description: "Pinned @freegamestore/cli version for the compliance gate. Bump deliberately."
         required: false
         type: string
-        default: "0.2.3"
+        default: "0.2.7"
       node_version:
         description: "Node.js major version"
         required: false
