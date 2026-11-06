@@ -276,8 +276,11 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
           test -n "$AWS_ACCESS_KEY_ID" || { echo "::error::R2_ACCESS_KEY_ID not set on freegamestore-online org secrets"; exit 1; }
+          # --exclude: never delete the keyless releases (games/<id>/.r/, from
+          # game-deploy.yml) a migrated game's route may be serving.
           aws s3 sync web/dist "s3://fgs-games/games/${GITHUB_REPOSITORY##*/}/" \
             --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" \
+            --exclude '.r/*' \
             --delete \
             --no-progress
           echo "Deployed games/${GITHUB_REPOSITORY##*/} from ${GITHUB_SHA::7} to R2 (Path B)"
