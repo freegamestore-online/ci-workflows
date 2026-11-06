@@ -1,0 +1,13 @@
+# Third-party actions in the reusable workflow are pinned to commit SHAs; this
+# is what moves those pins. Every app/game in the org calls this workflow at
+# @main, so each bump here reaches the whole fleet — review before merging.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ['*']
