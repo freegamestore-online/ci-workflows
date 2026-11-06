@@ -6,7 +6,13 @@ This repository hosts shared GitHub Actions workflows used by all game repositor
 
 ## Workflows
 
-- **game-ci.yml** — Standard CI pipeline for game repos (build, test, deploy)
+- **game-deploy.yml** — Keyless successor of game-ci.yml (freegamestore-online/platform#488):
+  the same build/compliance/smoke job, then a deploy job that uploads with a GitHub OIDC
+  token through admin.freegamestore.online. No R2 secret. Callers pin it by commit SHA and
+  grant `id-token: write`; `fgs publish` and the fleet tool write that caller
+  (platform `packages/compliance` `GAME_DEPLOY_WORKFLOW`).
+- **game-ci.yml** — Legacy pipeline (R2 secrets in the deploy job). Kept until every caller
+  has moved to game-deploy.yml.
 
 ## Usage
 
