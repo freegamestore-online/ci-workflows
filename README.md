@@ -6,20 +6,17 @@ This repository hosts shared GitHub Actions workflows used by all game repositor
 
 ## Workflows
 
-- **game-deploy.yml** — Keyless successor of game-ci.yml (freegamestore-online/platform#488):
-  the same build/compliance/smoke job, then a deploy job that uploads with a GitHub OIDC
+- **game-deploy.yml** — Build, compliance and smoke job, then a deploy job that uploads with a GitHub OIDC
   token through admin.freegamestore.online. No R2 secret. Callers pin it by commit SHA and
   grant `id-token: write`; `fgs publish` and the fleet tool write that caller
   (platform `packages/compliance` `GAME_DEPLOY_WORKFLOW`).
-- **game-ci.yml** — Legacy pipeline (R2 secrets in the deploy job). Kept until every caller
-  has moved to game-deploy.yml.
 
 ## Usage
 
 Reference workflows from this repo in your game repo's `.github/workflows/` files:
 
 ```yaml
-uses: freegamestore-online/ci-workflows/.github/workflows/game-ci.yml@main
+uses: freegamestore-online/ci-workflows/.github/workflows/game-deploy.yml@<commit-sha>
 ```
 
 ## Maintenance
@@ -28,7 +25,7 @@ These workflows are maintained centrally to ensure consistency across all games 
 
 ### Bumping the compliance CLI pin
 
-`game-ci.yml` pins `@freegamestore/cli` through the `compliance_cli_version`
+`game-deploy.yml` pins `@freegamestore/cli` through the `compliance_cli_version`
 input default. The same pin is repeated in every `template-game-*` repo's
 `.github/workflows/compliance.yml`, which runs `fgs check` on a scaffolded copy
 of the template. Move both together: if only one side moves, a template can pass
